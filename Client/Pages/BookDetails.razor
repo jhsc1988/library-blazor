@@ -6,17 +6,40 @@
 
 @if (book != null)
 {
-    <div class="card">
-        <img src="@book.CoverImageUrl" alt="Book Cover" class="card-img-top"/>
-        <div class="card-body">
-            <h5 class="card-title">@book.Title</h5>
-            <p class="card-text">@book.Author</p>
-            <p class="card-text">@book.Publisher</p>
-            <p class="card-text">@book.Language</p>
-            <p class="card-text">@book.ISBN</p>
-            <button class="btn btn-primary" @onclick="ReserveBook">Reserve</button>
+    <div class="d-flex justify-content-center">
+        <div class="card p-4 shadow" style="max-width: 800px;">
+            <div class="d-flex justify-content-center mt-3">
+                <img src="@book.CoverImageUrl" alt="Book Cover" class="card-img-top" style="max-width: 300px;"/>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title text-center">@book.Title</h5>
+                <div class="details">
+                    <p class="card-text">
+                        <strong>Author:</strong> @book.Author
+                    </p>
+                    <p class="card-text">
+                        <strong>Publisher:</strong> @book.Publisher
+                    </p>
+                    <p class="card-text">
+                        <strong>Language:</strong> @book.Language
+                    </p>
+                    <p class="card-text">
+                        <strong>ISBN:</strong> @book.ISBN
+                    </p>
+                </div>
+                <div class="d-flex justify-content-center mt-3">
+                    <button class="btn btn-primary" @onclick="ReserveBook">Reserve</button>
+                </div>
+            </div>
         </div>
     </div>
+
+    <style>
+    .details {
+        max-width: 300px;
+        margin: 0 auto;
+    }
+</style>
 }
 else
 {
@@ -27,6 +50,7 @@ else
 
     [Parameter]
     public string BookId { get; set; }
+
     private Book book;
 
     protected override async Task OnInitializedAsync()
@@ -40,6 +64,7 @@ else
             Console.WriteLine($"An error occurred: {ex.Message}");
         }
     }
+
 }
 
 @code {
@@ -64,4 +89,5 @@ else
             Console.WriteLine($"An error occurred: {ex.Message}");
         }
     }
+
 }
