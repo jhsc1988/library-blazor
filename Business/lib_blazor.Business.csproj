@@ -4,6 +4,8 @@
     <TargetFramework>net7.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AssemblyName>lib_blazor.Business</AssemblyName>
+    <RootNamespace>lib_blazor.Business</RootNamespace>
   </PropertyGroup>
 
 </Project>
