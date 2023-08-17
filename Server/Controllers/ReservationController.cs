@@ -24,7 +24,7 @@ namespace lib_blazor.Server.Controllers
         public async Task<IActionResult> ReserveBook([FromBody] int bookId)
         {
             Console.WriteLine("ReserveBook called");
-    
+
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             var userId = userIdClaim?.Value;
 
@@ -41,6 +41,15 @@ namespace lib_blazor.Server.Controllers
                 return BadRequest("User not found.");
             }
 
+            // Check if the user has already reserved this book
+            var existingReservation = await _context.Reservations
+                .AnyAsync(r => r.Book.Id == bookId && r.User.Id == userId);
+
+            if (existingReservation)
+            {
+                return BadRequest("You have already reserved this book.");
+            }
+
             var reservation = new Reservation
             {
                 Book = book,
@@ -53,6 +62,7 @@ namespace lib_blazor.Server.Controllers
 
             return Ok("Book reserved successfully!");
         }
+
         
         public async Task<int> GetEffectiveAmount(int bookId)
         {
