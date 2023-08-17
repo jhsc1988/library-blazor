@@ -10,7 +10,7 @@ namespace lib_blazor.Server.Data;
 public class ApplicationDbContext : ApiAuthorizationDbContext<ApplicationUser>
 {
     public DbSet<Book> Books { get; set; }
-    
+    public DbSet<Reservation> Reservations { get; set; }
     public ApplicationDbContext(
         DbContextOptions options,
         IOptions<OperationalStoreOptions> operationalStoreOptions) : base(options, operationalStoreOptions)
