@@ -1,21 +1,25 @@
 @page "/books/{BookId}"
 @using lib_blazor.Models
 @inject HttpClient Http
+@inject IJSRuntime JSRuntime
 
 <h3>Book Details</h3>
 
 @if (book != null)
 {
     <div class="d-flex justify-content-center">
-        <div class="card p-4 shadow" style="max-width: 800px;">
+       <div class="card p-4 shadow" style="max-width: 950px; margin-bottom: 30px;">
             <div class="d-flex justify-content-center mt-3">
-                <img src="@book.CoverImageUrl" alt="Book Cover" class="card-img-top" style="max-width: 300px;"/>
+                <img src="@book.CoverImageUrl" alt="Book Cover" class="card-img-top" style="max-width: 350px;"/>
             </div>
             <div class="card-body">
                 <h5 class="card-title text-center">@book.Title</h5>
-                <div class="details">
+                <div class="details" style="max-width: 450px; margin: 0 auto;">
                     <p class="card-text">
                         <strong>Author:</strong> @book.Author
+                    </p>
+                    <p class="card-text">
+                        <strong>Annotation:</strong> @book.Annotation
                     </p>
                     <p class="card-text">
                         <strong>Publisher:</strong> @book.Publisher
@@ -26,20 +30,42 @@
                     <p class="card-text">
                         <strong>ISBN:</strong> @book.ISBN
                     </p>
+                    <p class="card-text">
+                        <strong>Amount:</strong> @book.Amount
+                    </p>
                 </div>
+
+                @if (!string.IsNullOrEmpty(feedbackMessage))
+                {
+                    <div class="feedback-message @feedbackMessageType">
+                        @feedbackMessage
+                    </div>
+                }
+
                 <div class="d-flex justify-content-center mt-3">
-                    <button class="btn btn-primary" @onclick="ReserveBook">Reserve</button>
+                    <button class="btn btn-primary" @onclick="ReserveBook" disabled="@(!IsBookAvailable)">Reserve</button>
                 </div>
             </div>
         </div>
     </div>
 
+
     <style>
-    .details {
-        max-width: 300px;
-        margin: 0 auto;
-    }
-</style>
+        .details {
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .feedback-message {
+            color: green;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
 }
 else
 {
@@ -52,8 +78,15 @@ else
     public string BookId { get; set; }
 
     private Book book;
+    private string feedbackMessage = string.Empty;
+    private string feedbackMessageType = "";
 
     protected override async Task OnInitializedAsync()
+    {
+        await FetchBookDetails();
+    }
+
+    private async Task FetchBookDetails()
     {
         try
         {
@@ -65,29 +98,32 @@ else
         }
     }
 
-}
-
-@code {
-
     private async Task ReserveBook()
     {
+        Console.WriteLine("API ReserveBook called");
+
         try
         {
             var response = await Http.PostAsJsonAsync("api/reservation/", book.Id);
-
             if (response.IsSuccessStatusCode)
             {
-                Console.WriteLine(await response.Content.ReadAsStringAsync());
+                feedbackMessage = "Book reserved successfully!";
+                feedbackMessageType = ""; // clear the error class
+                await FetchBookDetails(); // Refresh the book details
             }
             else
             {
-                Console.WriteLine("Reservation failed. Please try again later.");
+                feedbackMessage = "Reservation failed. Please try again later.";
+                feedbackMessageType = "error";
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"An error occurred: {ex.Message}");
+            feedbackMessage = $"An error occurred: {ex.Message}";
+            feedbackMessageType = "error";
+            Console.WriteLine(feedbackMessage);
         }
     }
 
+    bool IsBookAvailable => book?.Amount > 0;
 }
