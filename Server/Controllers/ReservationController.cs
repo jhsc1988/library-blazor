@@ -2,12 +2,14 @@ using System.Security.Claims;
 using lib_blazor.Model;
 using lib_blazor.Server.Data;
 using lib_blazor.Server.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace lib_blazor.Server.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/[controller]")]
     public class ReservationController : ControllerBase
     {
@@ -21,11 +23,23 @@ namespace lib_blazor.Server.Controllers
         [HttpPost]
         public async Task<IActionResult> ReserveBook([FromBody] int bookId)
         {
+            Console.WriteLine("ReserveBook called");
+    
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             var userId = userIdClaim?.Value;
 
             var book = await _context.Books.FindAsync(bookId);
+            var effectiveAmount = await GetEffectiveAmount(bookId);
+            if (book == null || effectiveAmount <= 0)
+            {
+                return BadRequest("No more copies of the book available for reservation.");
+            }
+
             var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return BadRequest("User not found.");
+            }
 
             var reservation = new Reservation
             {
@@ -34,9 +48,17 @@ namespace lib_blazor.Server.Controllers
             };
 
             _context.Reservations.Add(reservation);
+
             await _context.SaveChangesAsync();
 
             return Ok("Book reserved successfully!");
+        }
+        
+        public async Task<int> GetEffectiveAmount(int bookId)
+        {
+            var totalReservations = await _context.Reservations.CountAsync(r => r.Book.Id == bookId);
+            var book = await _context.Books.FindAsync(bookId);
+            return book.Amount - totalReservations;
         }
         
         [HttpGet]

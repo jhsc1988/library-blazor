@@ -42,7 +42,12 @@ namespace lib_blazor.Server.Controllers
             {
                 return NotFound();
             }
+            
+            var reservedCount = await _context.Reservations.CountAsync(r => r.Book.Id == id);
+            book.Amount -= reservedCount;
 
+            if (book.Amount <= 0) book.Amount = 0;
+            
             return book;
         }
 
