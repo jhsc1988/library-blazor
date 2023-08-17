@@ -1,14 +1,15 @@
 using lib_blazor.Server;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using lib_blazor.Server.Data;
 using lib_blazor.Server.Models;
+using lib_blazor.Server.Repositories;
 using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddScoped<IBookRepository, BookRepository>();
 
 // Database connection
 var connectionString = builder.Configuration.GetConnectionString("lib_blazor_connection") ?? throw new InvalidOperationException("Connection string 'lib_blazor_connection' not found.");
