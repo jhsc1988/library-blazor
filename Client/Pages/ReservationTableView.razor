@@ -51,11 +51,22 @@ else
         Reservations = await HttpClient.GetFromJsonAsync<List<ReservationDto>>("api/reservation");
     }
 
-    private void DeleteReservation(int reservationId)
+    private async Task DeleteReservation(int reservationId)
     {
-    // Implement your delete logic here
-    // For example: ReservationService.DeleteReservation(reservationId);
-        Reservations.RemoveAll(r => r.ReservationId == reservationId);
+    // Send a DELETE request to the API endpoint
+        var response = await HttpClient.DeleteAsync($"api/reservation/{reservationId}");
+
+        if (response.IsSuccessStatusCode)
+        {
+    // If the API successfully deletes the reservation, remove it from the local list
+            Reservations.RemoveAll(r => r.ReservationId == reservationId);
+        }
+        else
+        {
+    // Handle error (e.g., show a message to the user or log the error)
+            Console.WriteLine($"Failed to delete reservation with ID: {reservationId}. Status code: {response.StatusCode}");
+        }
     }
+
 
 }
