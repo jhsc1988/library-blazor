@@ -1,0 +1,26 @@
+@using lib_blazor.Models
+@inject NavigationManager Navigation
+
+<div class="card shadow">
+    <img src="@Book.CoverImageUrl" alt="Book Cover" class="card-img-top"/>
+    <div class="card-body">
+        <h5 class="card-title" @onclick="NavigateToDetails">@Book.Title</h5>
+        <p class="card-text">@Book.Author</p>
+        <p class="card-text">@Book.Publisher</p>
+        <p class="card-text">@Book.Language</p>
+        <p class="card-text">@Book.ISBN</p>
+        <a href="javascript:void(0);" class="btn btn-primary" @onclick="NavigateToDetails">View Details</a>
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public Book Book { get; set; }
+
+    private void NavigateToDetails()
+    {
+        Navigation.NavigateTo($"books/{Book.Id}");
+    }
+
+}

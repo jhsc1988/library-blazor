@@ -1,0 +1,42 @@
+@page "/books/{BookId}"
+@using lib_blazor.Models
+@inject HttpClient Http
+
+<h3>Book Details</h3>
+
+@if (book != null)
+{
+    <div class="card">
+        <img src="@book.CoverImageUrl" alt="Book Cover" class="card-img-top" />
+        <div class="card-body">
+            <h5 class="card-title">@book.Title</h5>
+            <p class="card-text">@book.Author</p>
+            <p class="card-text">@book.Publisher</p>
+            <p class="card-text">@book.Language</p>
+            <p class="card-text">@book.ISBN</p>
+        </div>
+    </div>
+}
+else
+{
+    <p>Book not found.</p>
+}
+
+@code {
+    [Parameter]
+    public string BookId { get; set; }
+
+    private Book book;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            book = await Http.GetFromJsonAsync<Book>($"api/Book/{BookId}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred: {ex.Message}");
+        }
+    }
+}

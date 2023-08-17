@@ -1,0 +1,39 @@
+@page "/books"
+@using lib_blazor.Models
+@using Microsoft.AspNetCore.Authorization
+@inject HttpClient Http
+@attribute [Authorize]
+
+<h3>All Books</h3>
+
+<div class="row">
+    @if (books != null && books.Any())
+    {
+        @foreach (var book in books)
+        {
+            <div class="col-md-6 mb-4">
+                <BookCard Book="book" />
+            </div>
+        }
+    }
+    else
+    {
+        <p>No books available.</p>
+    }
+</div>
+
+@code {
+    private List<Book>? books;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            books = await Http.GetFromJsonAsync<List<Book>>("api/Book");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred: {ex.Message}");
+        }
+    }
+}
