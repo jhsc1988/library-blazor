@@ -1,11 +1,10 @@
-using lib_blazor.Business;
 using lib_blazor.Models;
 using lib_blazor.Server.Data;
-using Microsoft.AspNetCore.Authorization;
+using lib_blazor.Server.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace lib_blazor.Api.Controllers
+namespace lib_blazor.Server.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
