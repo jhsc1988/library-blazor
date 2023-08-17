@@ -1,19 +1,22 @@
 @page "/books/{BookId}"
 @using lib_blazor.Models
+@using lib_blazor.Model
 @inject HttpClient Http
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <h3>Book Details</h3>
 
 @if (book != null)
 {
     <div class="card">
-        <img src="@book.CoverImageUrl" alt="Book Cover" class="card-img-top" />
+        <img src="@book.CoverImageUrl" alt="Book Cover" class="card-img-top"/>
         <div class="card-body">
             <h5 class="card-title">@book.Title</h5>
             <p class="card-text">@book.Author</p>
             <p class="card-text">@book.Publisher</p>
             <p class="card-text">@book.Language</p>
             <p class="card-text">@book.ISBN</p>
+            <button class="btn btn-primary" @onclick="ReserveBook">Reserve</button>
         </div>
     </div>
 }
@@ -23,8 +26,11 @@ else
 }
 
 @code {
+
     [Parameter]
     public string BookId { get; set; }
+
+    public string UserId { get; set; }
 
     private Book book;
 
@@ -39,4 +45,50 @@ else
             Console.WriteLine($"An error occurred: {ex.Message}");
         }
     }
+
+}
+
+@code {
+
+    private async Task ReserveBook()
+    {
+        /*var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        string userId = null;
+        if (authState.User.Identity.IsAuthenticated)
+        {
+            var user = authState.User;
+            var userIdClaim = user.Claims.FirstOrDefault(c => c.Type == "sub");
+            userId = userIdClaim.Value;
+        }*/
+
+        try
+        {
+            /*if (book != null)
+            {
+                var reservationDto = new ReservationDto
+                {
+                    BookId = book.Id,
+                    UserId = userId
+                };*/
+
+                var response = await Http.PostAsJsonAsync("api/reservation/", book.Id);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine(await response.Content.ReadAsStringAsync());
+                }
+                else
+                {
+                    Console.WriteLine("Reservation failed. Please try again later.");
+                }
+            /*}*/
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred: {ex.Message}");
+        }
+    }
+
+}
+
 }
