@@ -1,7 +1,9 @@
 using System.Security.Claims;
+using lib_blazor.Model;
 using lib_blazor.Server.Data;
 using lib_blazor.Server.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace lib_blazor.Server.Controllers
 {
@@ -35,6 +37,22 @@ namespace lib_blazor.Server.Controllers
             await _context.SaveChangesAsync();
 
             return Ok("Book reserved successfully!");
+        }
+        
+        [HttpGet]
+        public  IEnumerable<ReservationDto> GetAllReservationsAsDtOs()
+        {
+            var reservations = _context.Reservations.Include(r => r.User).Include(r => r.Book)
+                .Select(r => new ReservationDto
+                {
+                    Username = r.User!.UserName,
+                    BookTitle = r.Book!.Title,
+                    Author = r.Book.Author,
+                    ReservationId = r.Id
+                })
+                .ToList();
+
+            return reservations;
         }
     }
 }
