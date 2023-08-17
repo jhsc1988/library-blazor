@@ -2,7 +2,7 @@ using lib_blazor.Models;
 using lib_blazor.Server.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace lib_blazor.Business;
+namespace lib_blazor.Server.Repositories;
 
 public class BookRepository : IBookRepository
 {
