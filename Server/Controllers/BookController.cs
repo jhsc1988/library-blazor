@@ -21,10 +21,19 @@ namespace lib_blazor.Server.Controllers
 
         // GET: api/Book
         [HttpGet]
-        public async Task<IActionResult> GetBooks()
+        public async Task<IActionResult> GetBooks(string? searchTerm)
         {
-            var books = await _bookRepository.GetBooksAsync();
-            return Ok(books);
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var books = await _bookRepository.GetBooksAsync();
+                return Ok(books);
+            }
+            else
+            {
+                var filteredBooks = await _bookRepository.GetBooksAsync();
+                filteredBooks = filteredBooks.Where(b => b.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+                return Ok(filteredBooks);
+            }
         }
 
         // GET: api/Book/5
