@@ -1,0 +1,61 @@
+@page "/reservation-table"
+@using lib_blazor.Model
+
+<h3>Reservation Table</h3>
+
+@if (Reservations == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="container mt-5">
+        <div class="table-responsive shadow rounded">
+            <table class="table table-hover">
+                <thead class="thead-dark">
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Username</th>
+                    <th scope="col">Book Title</th>
+                    <th scope="col">Author</th>
+                    <th scope="col">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var reservation in Reservations)
+                {
+                    <tr class="@(Reservations.IndexOf(reservation) % 2 == 0 ? "table-light" : "")">
+                        <th scope="row">@($"{Reservations.IndexOf(reservation) + 1}")</th>
+                        <td>@reservation.Username</td>
+                        <td>@reservation.BookTitle</td>
+                        <td>@reservation.Author</td>
+                        <td>
+                            <button @onclick="() => DeleteReservation(reservation.ReservationId)" class="btn btn-danger">Delete</button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@code {
+    private List<ReservationDto>? Reservations { get; set; }
+
+    [Inject]
+    private HttpClient HttpClient { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Reservations = await HttpClient.GetFromJsonAsync<List<ReservationDto>>("api/reservation");
+    }
+
+    private void DeleteReservation(int reservationId)
+    {
+    // Implement your delete logic here
+    // For example: ReservationService.DeleteReservation(reservationId);
+        Reservations.RemoveAll(r => r.ReservationId == reservationId);
+    }
+
+}
