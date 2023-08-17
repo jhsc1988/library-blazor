@@ -8,7 +8,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "lib_blazor.Client", "Client
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "lib_blazor.Shared", "Shared\lib_blazor.Shared.csproj", "{A43F1002-002F-4AC3-9EA8-DC4B28AB0716}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Business", "Business\Business.csproj", "{1B1CDFAA-D0A5-4A6A-B8A8-713CE6836B0C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "lib_blazor.Business", "Business\lib_blazor.Business.csproj", "{1B1CDFAA-D0A5-4A6A-B8A8-713CE6836B0C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
