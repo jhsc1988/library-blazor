@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using lib_blazor.Server.Data;
 using lib_blazor.Server.Models;
 using lib_blazor.Server.Repositories;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Server;
 using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -84,7 +86,6 @@ app.UseRouting();
 
 app.UseIdentityServer();
 app.UseAuthorization();
-
 
 app.MapRazorPages();
 app.MapControllers();
