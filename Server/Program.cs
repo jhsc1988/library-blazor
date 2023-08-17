@@ -7,9 +7,16 @@ using lib_blazor.Server.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
+// Database connection
+var connectionString = builder.Configuration.GetConnectionString("lib_blazor_connection") ?? throw new InvalidOperationException("Connection string 'lib_blazor_connection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(connectionString));
+{
+    options.UseMySql(connectionString,
+        ServerVersion.AutoDetect(connectionString));
+    options.EnableSensitiveDataLogging();
+});
+
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
