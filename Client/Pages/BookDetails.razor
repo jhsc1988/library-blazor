@@ -1,8 +1,6 @@
 @page "/books/{BookId}"
 @using lib_blazor.Models
-@using lib_blazor.Model
 @inject HttpClient Http
-@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <h3>Book Details</h3>
 
@@ -29,9 +27,6 @@ else
 
     [Parameter]
     public string BookId { get; set; }
-
-    public string UserId { get; set; }
-
     private Book book;
 
     protected override async Task OnInitializedAsync()
@@ -45,50 +40,28 @@ else
             Console.WriteLine($"An error occurred: {ex.Message}");
         }
     }
-
 }
 
 @code {
 
     private async Task ReserveBook()
     {
-        /*var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        string userId = null;
-        if (authState.User.Identity.IsAuthenticated)
-        {
-            var user = authState.User;
-            var userIdClaim = user.Claims.FirstOrDefault(c => c.Type == "sub");
-            userId = userIdClaim.Value;
-        }*/
-
         try
         {
-            /*if (book != null)
+            var response = await Http.PostAsJsonAsync("api/reservation/", book.Id);
+
+            if (response.IsSuccessStatusCode)
             {
-                var reservationDto = new ReservationDto
-                {
-                    BookId = book.Id,
-                    UserId = userId
-                };*/
-
-                var response = await Http.PostAsJsonAsync("api/reservation/", book.Id);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    Console.WriteLine(await response.Content.ReadAsStringAsync());
-                }
-                else
-                {
-                    Console.WriteLine("Reservation failed. Please try again later.");
-                }
-            /*}*/
+                Console.WriteLine(await response.Content.ReadAsStringAsync());
+            }
+            else
+            {
+                Console.WriteLine("Reservation failed. Please try again later.");
+            }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"An error occurred: {ex.Message}");
         }
     }
-
-}
-
 }

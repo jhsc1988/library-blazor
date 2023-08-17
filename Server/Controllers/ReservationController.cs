@@ -1,9 +1,6 @@
 using System.Security.Claims;
-using System.Threading.Tasks;
-using lib_blazor.Model;
 using lib_blazor.Server.Data;
 using lib_blazor.Server.Models;
-using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace lib_blazor.Server.Controllers
@@ -13,7 +10,6 @@ namespace lib_blazor.Server.Controllers
     public class ReservationController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private readonly AuthenticationStateProvider _authenticationStateProvider;
 
         public ReservationController(ApplicationDbContext context)
         {
@@ -21,11 +17,10 @@ namespace lib_blazor.Server.Controllers
         }
 
         [HttpPost]
-        /*public async Task<IActionResult> ReserveBook(ReservationDto reservationDto)*/
         public async Task<IActionResult> ReserveBook([FromBody] int bookId)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            var userId = userIdClaim.Value;
+            var userId = userIdClaim?.Value;
 
             var book = await _context.Books.FindAsync(bookId);
             var user = await _context.Users.FindAsync(userId);
@@ -36,11 +31,9 @@ namespace lib_blazor.Server.Controllers
                 User = user
             };
 
-            // Add the reservation to the database.
             _context.Reservations.Add(reservation);
             await _context.SaveChangesAsync();
 
-            // Return the success message.
             return Ok("Book reserved successfully!");
         }
     }
