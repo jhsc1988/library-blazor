@@ -4,7 +4,17 @@
 @inject HttpClient Http
 @attribute [Authorize]
 
-<h3>All Books</h3>
+<h3 class="text-center">All Books</h3>
+
+<div class="d-flex justify-content-center align-items-center" style="height: 100px;">
+    <div class="input-group mb-3">
+       <input type="text" @bind="searchTerm" class="form-control" placeholder="Search for books..." aria-label="Search for books..." @onkeydown="CheckForEnter">
+        <div class="input-group-append">
+            <button class="btn btn-outline-secondary" type="button" @onclick="SearchBooks">Search</button>
+        </div>
+    </div>
+</div>
+
 
 <div class="row">
     @if (books != null && books.Any())
@@ -18,18 +28,44 @@
     }
     else
     {
-        <p>No books available.</p>
+        <p class="text-center">No books available.</p>
     }
 </div>
 
 @code {
     private List<Book>? books;
+    private string searchTerm = string.Empty;
 
+    private async Task SearchBooks()
+    {
+        await LoadBooks(searchTerm);
+    }
+
+    void CheckForEnter(KeyboardEventArgs e)
+    {
+        if (e.Code is "Enter" or "NumpadEnter")
+        {
+            SearchBooks();
+        }
+    }
+    
     protected override async Task OnInitializedAsync()
+    {
+        await LoadBooks(searchTerm);
+    }
+
+    private async Task LoadBooks(string term)
     {
         try
         {
-            books = await Http.GetFromJsonAsync<List<Book>>("api/Book");
+            if (string.IsNullOrWhiteSpace(term))
+            {
+                books = await Http.GetFromJsonAsync<List<Book>>("api/Book");
+            }
+            else
+            {
+                books = await Http.GetFromJsonAsync<List<Book>>($"api/Book?searchTerm={term}");
+            }
         }
         catch (Exception ex)
         {
