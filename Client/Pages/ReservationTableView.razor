@@ -1,5 +1,6 @@
 @page "/reservation-table"
 @using lib_blazor.Model
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 
 <h3>Reservation Table</h3>
 
@@ -11,26 +12,28 @@ else
 {
     <div class="container mt-5">
         <div class="table-responsive shadow rounded">
-            <table class="table table-hover">
+            <table class="table table-hover table-sm">
                 <thead class="thead-dark">
                 <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Username</th>
-                    <th scope="col">Book Title</th>
-                    <th scope="col">Author</th>
-                    <th scope="col">Action</th>
+                    <th scope="col" class="px-3 py-2 align-middle">#</th>
+                    <th scope="col" class="px-3 py-2 align-middle">Username</th>
+                    <th scope="col" class="px-3 py-2 align-middle">Book Title</th>
+                    <th scope="col" class="px-3 py-2 align-middle">Author</th>
+                    <th scope="col" class="px-3 py-2 align-middle">Action</th>
                 </tr>
                 </thead>
                 <tbody>
                 @foreach (var reservation in Reservations)
                 {
-                    <tr class="@(Reservations.IndexOf(reservation) % 2 == 0 ? "table-light" : "")">
-                        <th scope="row">@($"{Reservations.IndexOf(reservation) + 1}")</th>
-                        <td>@reservation.Username</td>
-                        <td>@reservation.BookTitle</td>
-                        <td>@reservation.Author</td>
-                        <td>
-                            <button @onclick="() => DeleteReservation(reservation.ReservationId)" class="btn btn-danger">Delete</button>
+                    <tr class="@(Reservations.IndexOf(reservation) % 2 == 0 ? "" : "bg-light")">
+                        <th scope="row" class="px-3 py-2 align-middle">@($"{Reservations.IndexOf(reservation) + 1}")</th>
+                        <td class="px-3 py-2 align-middle">@reservation.Username</td>
+                        <td class="px-3 py-2 align-middle">
+                            <a href="#" class="text-primary">@reservation.BookTitle</a>
+                        </td>
+                        <td class="px-3 py-2 align-middle">@reservation.Author</td>
+                        <td class="px-3 py-2 align-middle">
+                            <button @onclick="() => DeleteReservation(reservation.ReservationId)" class="btn btn-danger btn-sm">Delete</button>
                         </td>
                     </tr>
                 }
@@ -38,6 +41,10 @@ else
             </table>
         </div>
     </div>
+
+
+
+
 }
 
 @code {
@@ -48,25 +55,27 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        Reservations = await HttpClient.GetFromJsonAsync<List<ReservationDto>>("api/reservation");
+        try
+        {
+            Reservations = await HttpClient.GetFromJsonAsync<List<ReservationDto>>("api/reservation");
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        }
     }
 
     private async Task DeleteReservation(int reservationId)
     {
-    // Send a DELETE request to the API endpoint
         var response = await HttpClient.DeleteAsync($"api/reservation/{reservationId}");
-
         if (response.IsSuccessStatusCode)
         {
-    // If the API successfully deletes the reservation, remove it from the local list
-            Reservations.RemoveAll(r => r.ReservationId == reservationId);
+            Reservations?.RemoveAll(r => r.ReservationId == reservationId);
         }
         else
         {
-    // Handle error (e.g., show a message to the user or log the error)
             Console.WriteLine($"Failed to delete reservation with ID: {reservationId}. Status code: {response.StatusCode}");
         }
     }
-
 
 }
