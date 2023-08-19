@@ -26,9 +26,9 @@ public class BookRepository : IBookRepository
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
-                query = query.Where(b => b.Title.ToLower().Contains(searchTerm.ToLower()));
-
-            }
+                query = query.Where(b => b.Title.ToLower().Contains(searchTerm.ToLower()) ||
+                                         b.Author.ToLower().Contains(searchTerm.ToLower()) ||
+                                         b.Annotation.ToLower().Contains(searchTerm.ToLower()));}
 
             var books = await query.ToListAsync();
             return (true, books, null);
