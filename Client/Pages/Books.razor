@@ -6,14 +6,28 @@
 
 <h3 class="text-center">All Books</h3>
 
+<style>
+    .custom-input-group {
+        width: 400px; /* Set the desired width for the input group */
+    }
+
+    .custom-input {
+        margin-right: 10px; /* Spacing between input and button */
+    }
+</style>
+
 <div class="d-flex justify-content-center align-items-center" style="height: 100px;">
-    <div class="input-group mb-3">
-       <input type="text" @bind="searchTerm" class="form-control" placeholder="Search for books..." aria-label="Search for books..." @onkeydown="CheckForEnter">
-        <div class="input-group-append">
-            <button class="btn btn-outline-secondary" type="button" @onclick="SearchBooks">Search</button>
+    <form @onsubmit="HandleFormSubmit" class="custom-input-group">
+        <div class="input-group">
+            <input type="text" @bind="searchTerm" class="form-control custom-input" placeholder="Search for books..." aria-label="Search for books...">
+            <div class="input-group-append">
+                <button type="submit" class="btn btn-outline-secondary">Search</button>
+            </div>
         </div>
-    </div>
+    </form>
 </div>
+
+
 
 
 <div class="row">
@@ -36,19 +50,11 @@
     private List<Book>? books;
     private string searchTerm = string.Empty;
 
-    private async Task SearchBooks()
+    private async Task HandleFormSubmit()
     {
         await LoadBooks(searchTerm);
     }
 
-    void CheckForEnter(KeyboardEventArgs e)
-    {
-        if (e.Code is "Enter" or "NumpadEnter")
-        {
-            SearchBooks();
-        }
-    }
-    
     protected override async Task OnInitializedAsync()
     {
         await LoadBooks(searchTerm);
