@@ -1,32 +1,136 @@
-using lib_blazor.Models;
-using lib_blazor.Server.Data;
-using Microsoft.EntityFrameworkCore;
+using lib_blazor.Server.Repositories.IRepositories;
 
 namespace lib_blazor.Server.Repositories;
 
+using lib_blazor.Models;
+using Data;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
 public class BookRepository : IBookRepository
 {
-    private readonly ApplicationDbContext _dbContext;
+    private readonly ApplicationDbContext _context;
 
-    public BookRepository(ApplicationDbContext dbContext)
+    public BookRepository(ApplicationDbContext context)
     {
-        _dbContext = dbContext;
+        _context = context;
     }
 
-    public async Task<List<Book>> GetBooksAsync()
+    public async Task<(bool IsSuccess, IEnumerable<Book> Books, string ErrorMessage)> GetBooksAsync(string searchTerm = null)
     {
-        return await _dbContext.Books.ToListAsync();
+        try
+        {
+            var query = _context.Books.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                query = query.Where(b => b.Title.ToLower().Contains(searchTerm.ToLower()));
+
+            }
+
+            var books = await query.ToListAsync();
+            return (true, books, null);
+        }
+        catch (Exception ex)
+        {
+            return (false, null, ex.Message);
+        }
     }
 
-    public async Task UploadBookAsync(Book book)
+
+    public async Task<(bool IsSuccess, Book Book, string ErrorMessage)> GetBookByIdAsync(int id)
     {
-        await _dbContext.Books.AddAsync(book); //TODO: BookDTO
-        await _dbContext.SaveChangesAsync();
+        try
+        {
+            var book = await _context.Books.FindAsync(id);
+            return book != null ? (true, book, null) : (false, null, "Book not found");
+        }
+        catch (Exception ex)
+        {
+            return (false, null, ex.Message);
+        }
+    }
+    public async Task<(bool IsSuccess, Book Book, string ErrorMessage)> GetOriginalBookByIdAsync(int id)
+    {
+        try
+        {
+            var book = await _context.Books.AsNoTracking().FirstOrDefaultAsync(b => b.Id == id); 
+            return book != null ? (true, book, null) : (false, null, "Book not found");
+        }
+        catch (Exception ex)
+        {
+            return (false, null, ex.Message);
+        }
+    }
+    public async Task<(bool IsSuccess, int ReservedCount, string ErrorMessage)> GetReservedCountForBookAsync(int id)
+    {
+        try
+        {
+            var count = await _context.Reservations.CountAsync(r => r.Book.Id == id);
+            return (true, count, null);
+        }
+        catch (Exception ex)
+        {
+            return (false, 0, ex.Message);
+        }
+    }
+
+    public async Task<(bool IsSuccess, string ErrorMessage)> BookExistsAsync(int id)
+    {
+        try
+        {
+            var exists = await _context.Books.AnyAsync(e => e.Id == id);
+            return (exists, null);
+        }
+        catch (Exception ex)
+        {
+            return (false, ex.Message);
+        }
+    }
+
+    public async Task<(bool IsSuccess, string ErrorMessage)> UpdateBookAsync(Book book)
+    {
+        try
+        {
+            _context.Entry(book).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            return (false, ex.Message);
+        }
+    }
+
+    public async Task<(bool IsSuccess, string ErrorMessage)> AddBookAsync(Book book)
+    {
+        try
+        {
+            _context.Books.Add(book);
+            await _context.SaveChangesAsync();
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            return (false, ex.Message);
+        }
+    }
+
+    public async Task<(bool IsSuccess, string ErrorMessage)> DeleteBookAsync(Book book)
+    {
+        try
+        {
+            _context.Books.Remove(book);
+            await _context.SaveChangesAsync();
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            return (false, ex.Message);
+        }
     }
 }
 
-public interface IBookRepository
-{
-    public Task UploadBookAsync(Book book);
-    public Task<List<Book>> GetBooksAsync();
-}
+
