@@ -18,4 +18,9 @@
     <ProjectReference Include="..\Shared\lib_blazor.Shared.csproj" />
   </ItemGroup>
 
+
+  <ItemGroup>
+    <Folder Include="Pages\SharedComponents\" />
+  </ItemGroup>
+
 </Project>
