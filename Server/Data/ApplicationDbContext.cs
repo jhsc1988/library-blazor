@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Duende.IdentityServer.EntityFramework.Options;
-using lib_blazor.Models;
+using lib_blazor.Model;
 using lib_blazor.Server.Models;
 
 namespace lib_blazor.Server.Data;

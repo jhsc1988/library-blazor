@@ -2,9 +2,9 @@ namespace lib_blazor.Model
 {
     public class ReservationDto
     {
-        public string? Username { get; set; }
-        public string BookTitle { get; set; }
-        public string Author { get; set; }
-        public int ReservationId { get; set; }
+        public required string Username { get; init; }
+        public required string BookTitle { get; init; }
+        public required string Author { get; init; }
+        public int ReservationId { get; init; }
     }
 }

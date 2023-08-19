@@ -1,13 +1,13 @@
-using lib_blazor.Server.Repositories.IRepositories;
-
 namespace lib_blazor.Server.Repositories;
 
-using lib_blazor.Models;
+using Model;
+using IRepositories;
 using Data;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+
 
 public class BookRepository : IBookRepository
 {
@@ -18,7 +18,8 @@ public class BookRepository : IBookRepository
         _context = context;
     }
 
-    public async Task<(bool IsSuccess, IEnumerable<Book> Books, string ErrorMessage)> GetBooksAsync(string searchTerm = null)
+    public async Task<(bool IsSuccess, IEnumerable<Book> Books, string ErrorMessage)> GetBooksAsync(
+        string? searchTerm = null)
     {
         try
         {
@@ -28,14 +29,15 @@ public class BookRepository : IBookRepository
             {
                 query = query.Where(b => b.Title.ToLower().Contains(searchTerm.ToLower()) ||
                                          b.Author.ToLower().Contains(searchTerm.ToLower()) ||
-                                         b.Annotation.ToLower().Contains(searchTerm.ToLower()));}
+                                         b.Annotation.ToLower().Contains(searchTerm.ToLower()));
+            }
 
             var books = await query.ToListAsync();
-            return (true, books, null);
+            return (true, books, null)!;
         }
         catch (Exception ex)
         {
-            return (false, null, ex.Message);
+            return (false, null, ex.Message)!;
         }
     }
 
@@ -45,31 +47,33 @@ public class BookRepository : IBookRepository
         try
         {
             var book = await _context.Books.FindAsync(id);
-            return book != null ? (true, book, null) : (false, null, "Book not found");
+            return book != null ? (true, book, null)! : (false, null, "Book not found")!;
         }
         catch (Exception ex)
         {
-            return (false, null, ex.Message);
+            return (false, null, ex.Message)!;
         }
     }
+
     public async Task<(bool IsSuccess, Book Book, string ErrorMessage)> GetOriginalBookByIdAsync(int id)
     {
         try
         {
-            var book = await _context.Books.AsNoTracking().FirstOrDefaultAsync(b => b.Id == id); 
-            return book != null ? (true, book, null) : (false, null, "Book not found");
+            var book = await _context.Books.AsNoTracking().FirstOrDefaultAsync(b => b.Id == id);
+            return book != null ? (true, book, null)! : (false, null, "Book not found")!;
         }
         catch (Exception ex)
         {
-            return (false, null, ex.Message);
+            return (false, null, ex.Message)!;
         }
     }
+
     public async Task<(bool IsSuccess, int ReservedCount, string ErrorMessage)> GetReservedCountForBookAsync(int id)
     {
         try
         {
-            var count = await _context.Reservations.CountAsync(r => r.Book.Id == id);
-            return (true, count, null);
+            var count = await _context.Reservations.CountAsync(r => r.Book!.Id == id);
+            return (true, count, null)!;
         }
         catch (Exception ex)
         {
@@ -82,7 +86,7 @@ public class BookRepository : IBookRepository
         try
         {
             var exists = await _context.Books.AnyAsync(e => e.Id == id);
-            return (exists, null);
+            return (exists, null)!;
         }
         catch (Exception ex)
         {
@@ -96,7 +100,7 @@ public class BookRepository : IBookRepository
         {
             _context.Entry(book).State = EntityState.Modified;
             await _context.SaveChangesAsync();
-            return (true, null);
+            return (true, null)!;
         }
         catch (Exception ex)
         {
@@ -110,7 +114,7 @@ public class BookRepository : IBookRepository
         {
             _context.Books.Add(book);
             await _context.SaveChangesAsync();
-            return (true, null);
+            return (true, null)!;
         }
         catch (Exception ex)
         {
@@ -124,7 +128,7 @@ public class BookRepository : IBookRepository
         {
             _context.Books.Remove(book);
             await _context.SaveChangesAsync();
-            return (true, null);
+            return (true, null)!;
         }
         catch (Exception ex)
         {
@@ -132,5 +136,3 @@ public class BookRepository : IBookRepository
         }
     }
 }
-
-

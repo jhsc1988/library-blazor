@@ -1,6 +1,7 @@
 @page "/reservation-table"
 @using lib_blazor.Model
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using System.Diagnostics
 
 <h3>Reservation Table</h3>
 
@@ -47,12 +48,13 @@ else
     private List<ReservationDto>? Reservations { get; set; }
 
     [Inject]
-    private HttpClient HttpClient { get; set; }
+    private HttpClient? HttpClient { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
+            Debug.Assert(HttpClient != null, nameof(HttpClient) + " != null");
             Reservations = await HttpClient.GetFromJsonAsync<List<ReservationDto>>("api/reservation");
         }
         catch (AccessTokenNotAvailableException exception)
@@ -63,6 +65,7 @@ else
 
     private async Task DeleteReservation(int reservationId)
     {
+        Debug.Assert(HttpClient != null, nameof(HttpClient) + " != null");
         var response = await HttpClient.DeleteAsync($"api/reservation/{reservationId}");
         if (response.IsSuccessStatusCode)
         {

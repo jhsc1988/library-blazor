@@ -1,59 +1,59 @@
 @page "/books/edit/{BookId}"
-@using lib_blazor.Models
 @using lib_blazor.Shared
+@using lib_blazor.Model
 @inject HttpClient Http
 @inject NavigationManager NavManager
 @inject UserRoleCheck UserRoleChecker
 
 <h3>Edit Book</h3>
 
-@if (book != null && IsAdmin)
+@if (_book != null && IsAdmin)
 {
     <div class="d-flex justify-content-center">
         <div class="card p-4 shadow" style="max-width: 750px; width: 100%; margin-bottom: 30px;">
-            <EditForm Model="book" OnValidSubmit="UpdateBook">
+            <EditForm Model="_book" OnValidSubmit="UpdateBook">
                 <DataAnnotationsValidator/>
                 <div class="d-flex justify-content-center mt-3">
-                    <img src="@book.CoverImageUrl" alt="Book Cover" class="card-img-top" style="max-width: 350px;"/>
+                    <img src="@_book.CoverImageUrl" alt="Book Cover" class="card-img-top" style="max-width: 350px;"/>
                 </div>
                 <div class="card-body">
-                    <h5 class="card-title text-center">@book.Title</h5>
+                    <h5 class="card-title text-center">@_book.Title</h5>
                     <div class="details" style="max-width: 450px; margin: 0 auto;">
 
                         <div class="mb-3">
                             <label for="title" class="form-label">Title</label>
-                            <InputText class="form-control" id="title" @bind-Value="book.Title" required/>
-                            <ValidationMessage For="@(() => book.Title)"/>
+                            <InputText class="form-control" id="title" @bind-Value="_book.Title" required/>
+                            <ValidationMessage For="@(() => _book.Title)"/>
                         </div>
                         <div class="mb-3">
                             <label for="author" class="form-label">Author</label>
-                            <InputText class="form-control" id="author" @bind-Value="book.Author" required/>
-                            <ValidationMessage For="@(() => book.Author)"/>
+                            <InputText class="form-control" id="author" @bind-Value="_book.Author" required/>
+                            <ValidationMessage For="@(() => _book.Author)"/>
                         </div>
                         <div class="mb-3">
                             <label for="annotation" class="form-label">Annotation</label>
-                            <InputTextArea class="form-control" id="annotation" @bind-Value="book.Annotation" required rows="10"/>
-                            <ValidationMessage For="@(() => book.Annotation)"/>
+                            <InputTextArea class="form-control" id="annotation" @bind-Value="_book.Annotation" required rows="10"/>
+                            <ValidationMessage For="@(() => _book.Annotation)"/>
                         </div>
                         <div class="mb-3">
                             <label for="publisher" class="form-label">Publisher</label>
-                            <InputText class="form-control" id="publisher" @bind-Value="book.Publisher" required/>
-                            <ValidationMessage For="@(() => book.Publisher)"/>
+                            <InputText class="form-control" id="publisher" @bind-Value="_book.Publisher" required/>
+                            <ValidationMessage For="@(() => _book.Publisher)"/>
                         </div>
                         <div class="mb-3">
                             <label for="language" class="form-label">Language</label>
-                            <InputText class="form-control" id="language" @bind-Value="book.Language" required/>
-                            <ValidationMessage For="@(() => book.Language)"/>
+                            <InputText class="form-control" id="language" @bind-Value="_book.Language" required/>
+                            <ValidationMessage For="@(() => _book.Language)"/>
                         </div>
                         <div class="mb-3">
                             <label for="isbn" class="form-label">ISBN</label>
-                            <InputText class="form-control" id="isbn" @bind-Value="book.ISBN" required pattern="\d{3}-\d{1,5}-\d{1,7}-\d{1,7}-\d{1,7}"/>
-                            <ValidationMessage For="@(() => book.ISBN)"/>
+                            <InputText class="form-control" id="isbn" @bind-Value="_book.Isbn" required pattern="\d{3}-\d{1,5}-\d{1,7}-\d{1,7}-\d{1,7}"/>
+                            <ValidationMessage For="@(() => _book.Isbn)"/>
                         </div>
                         <div class="mb-3">
                             <label for="amount" class="form-label">Amount</label>
-                            <InputNumber class="form-control" id="amount" @bind-Value="book.Amount" min="0"/>
-                            <ValidationMessage For="@(() => book.Amount)"/>
+                            <InputNumber class="form-control" id="amount" @bind-Value="_book.Amount" min="0"/>
+                            <ValidationMessage For="@(() => _book.Amount)"/>
                         </div>
                         <div class="d-flex justify-content-center mt-3">
                             <button type="submit" class="btn btn-primary" style="margin-right: 20px;">Save</button> <!-- Inline style for margin -->
@@ -65,10 +65,10 @@
         </div>
     </div>
 
-    @if (!string.IsNullOrEmpty(feedbackMessage))
+    @if (!string.IsNullOrEmpty(_feedbackMessage))
     {
-        <div class="feedback-message @feedbackMessageType">
-            @feedbackMessage
+        <div class="feedback-message @_feedbackMessageType">
+            @_feedbackMessage
         </div>
     }
 
@@ -98,11 +98,11 @@ else
 @code {
 
     [Parameter]
-    public string BookId { get; set; }
+    public required string BookId { get; set; }
 
-    private Book book;
-    private string feedbackMessage = string.Empty;
-    private string feedbackMessageType = "";
+    private Book? _book;
+    private string _feedbackMessage = string.Empty;
+    private string _feedbackMessageType = "";
 
     private bool IsAdmin { get; set; } = false;
 
@@ -117,11 +117,11 @@ else
     
     private async Task FetchBookDetails()
     {
-        feedbackMessage = ""; // Clear feedback message
+        _feedbackMessage = ""; // Clear feedback message
         try
         {
     // Fetch the book details for editing to get the original amount
-            book = await Http.GetFromJsonAsync<Book>($"api/Book/{BookId}/edit");
+            _book = await Http.GetFromJsonAsync<Book>($"api/Book/{BookId}/edit");
         }
         catch (Exception ex)
         {
@@ -134,35 +134,35 @@ else
     {
         try
         {
-            var response = await Http.PutAsJsonAsync($"api/Book/{BookId}", book);
+            var response = await Http.PutAsJsonAsync($"api/Book/{BookId}", _book);
             if (response.IsSuccessStatusCode)
             {
-                feedbackMessage = "Book updated successfully!";
-                feedbackMessageType = "";
+                _feedbackMessage = "Book updated successfully!";
+                _feedbackMessageType = "";
                 NavManager.NavigateTo($"/books/{BookId}"); // redirect to book details page
             }
             else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
             {
-                feedbackMessage = "Invalid book details.";
-                feedbackMessageType = "error";
+                _feedbackMessage = "Invalid book details.";
+                _feedbackMessageType = "error";
             }
             else
             {
-                feedbackMessage = "Update failed. Please try again later.";
-                feedbackMessageType = "error";
+                _feedbackMessage = "Update failed. Please try again later.";
+                _feedbackMessageType = "error";
             }
         }
         catch (Exception ex)
         {
-            feedbackMessage = $"An error occurred: {ex.Message}";
-            feedbackMessageType = "error";
-            Console.WriteLine(feedbackMessage);
+            _feedbackMessage = $"An error occurred: {ex.Message}";
+            _feedbackMessageType = "error";
+            Console.WriteLine(_feedbackMessage);
         }
     }
 
     private void CancelEdit()
     {
-        feedbackMessage = ""; // Clear feedback message
+        _feedbackMessage = ""; // Clear feedback message
         NavManager.NavigateTo($"/books/{BookId}");
     }
 

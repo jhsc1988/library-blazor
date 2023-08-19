@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Security.Claims;
 using lib_blazor.Model;
 using lib_blazor.Server.Data;
@@ -43,7 +44,7 @@ namespace lib_blazor.Server.Controllers
 
             // Check if the user has already reserved this book
             var existingReservation = await _context.Reservations
-                .AnyAsync(r => r.Book.Id == bookId && r.User.Id == userId);
+                .AnyAsync(r => r.Book!.Id == bookId && r.User!.Id == userId);
 
             if (existingReservation)
             {
@@ -66,8 +67,9 @@ namespace lib_blazor.Server.Controllers
         
         public async Task<int> GetEffectiveAmount(int bookId)
         {
-            var totalReservations = await _context.Reservations.CountAsync(r => r.Book.Id == bookId);
+            var totalReservations = await _context.Reservations.CountAsync(r => r.Book!.Id == bookId);
             var book = await _context.Books.FindAsync(bookId);
+            Debug.Assert(book != null, nameof(book) + " != null");
             return book.Amount - totalReservations;
         }
         
@@ -85,7 +87,7 @@ namespace lib_blazor.Server.Controllers
                     .Include(r => r.Book)
                     .Select(r => new ReservationDto
                     {
-                        Username = r.User!.UserName,
+                        Username = r.User!.UserName ?? string.Empty,
                         BookTitle = r.Book!.Title,
                         Author = r.Book.Author,
                         ReservationId = r.Id
@@ -102,10 +104,10 @@ namespace lib_blazor.Server.Controllers
                 var reservations = _context.Reservations
                     .Include(r => r.User)
                     .Include(r => r.Book)
-                    .Where(r => r.User.Id == userId) // Filter by the current user's ID
+                    .Where(r => r.User!.Id == userId) // Filter by the current user's ID
                     .Select(r => new ReservationDto
                     {
-                        Username = r.User!.UserName,
+                        Username = r.User!.UserName ?? string.Empty,
                         BookTitle = r.Book!.Title,
                         Author = r.Book.Author,
                         ReservationId = r.Id

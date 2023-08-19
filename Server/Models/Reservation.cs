@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using lib_blazor.Models;
+using lib_blazor.Model;
 
 namespace lib_blazor.Server.Models
 {

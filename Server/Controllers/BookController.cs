@@ -1,8 +1,8 @@
-using lib_blazor.Models;
 using lib_blazor.Server.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using System.Threading.Tasks;
+using lib_blazor.Model;
 using lib_blazor.Server.Repositories.IRepositories;
 
 namespace lib_blazor.Server.Controllers
@@ -20,7 +20,7 @@ namespace lib_blazor.Server.Controllers
 
         // GET: api/Book/5/edit
         [HttpGet("{id}/edit")]
-        public async Task<ActionResult<Book>> GetBookForEditing(int id)
+        public async Task<ActionResult<Model.Book>> GetBookForEditing(int id)
         {
             var result = await _bookRepository.GetOriginalBookByIdAsync(id);
 
@@ -34,7 +34,7 @@ namespace lib_blazor.Server.Controllers
 
 // GET: api/Book/5/details
         [HttpGet("{id}/details")]
-        public async Task<ActionResult<Book>> GetBookDetails(int id)
+        public async Task<ActionResult<Model.Book>> GetBookDetails(int id)
         {
             var result = await _bookRepository.GetBookByIdAsync(id);
 
@@ -74,9 +74,9 @@ namespace lib_blazor.Server.Controllers
 
         // GET: api/Book/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Book>> GetBook(int id, bool forEditing = false)
+        public async Task<ActionResult<Model.Book>> GetBook(int id, bool forEditing = false)
         {
-            (bool IsSuccess, Book Book, string ErrorMessage) result;
+            (bool IsSuccess, Model.Book Book, string ErrorMessage) result;
 
             // Decide which method to use based on the forEditing flag.
             if (forEditing)

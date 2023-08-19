@@ -1,10 +1,10 @@
-using lib_blazor.Models;
+using lib_blazor.Model;
 
 namespace lib_blazor.Server.Repositories.IRepositories;
 
 public interface IBookRepository
 {
-    Task<(bool IsSuccess, IEnumerable<Book> Books, string ErrorMessage)> GetBooksAsync(string searchTerm = null);
+    Task<(bool IsSuccess, IEnumerable<Book> Books, string ErrorMessage)> GetBooksAsync(string? searchTerm = null);
 
     Task<(bool IsSuccess, Book Book, string ErrorMessage)> GetBookByIdAsync(int id);
     Task<(bool IsSuccess, Book Book, string ErrorMessage)> GetOriginalBookByIdAsync(int id);
