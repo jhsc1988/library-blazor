@@ -1,14 +1,17 @@
 @page "/books/{BookId}"
 @using lib_blazor.Models
+@using lib_blazor.Shared
 @inject HttpClient Http
 @inject IJSRuntime JSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavManager
 
 <h3>Book Details</h3>
 
 @if (book != null)
 {
     <div class="d-flex justify-content-center">
-       <div class="card p-4 shadow" style="max-width: 950px; margin-bottom: 30px;">
+        <div class="card p-4 shadow" style="max-width: 950px; margin-bottom: 30px;">
             <div class="d-flex justify-content-center mt-3">
                 <img src="@book.CoverImageUrl" alt="Book Cover" class="card-img-top" style="max-width: 350px;"/>
             </div>
@@ -43,8 +46,14 @@
                 }
 
                 <div class="d-flex justify-content-center mt-3">
-                    <button class="btn btn-primary" @onclick="ReserveBook" disabled="@(!IsBookAvailable)">Reserve</button>
+                    <button class="btn btn-primary" style="margin-right: 20px;" @onclick="ReserveBook" disabled="@(!IsBookAvailable)">Reserve</button>
+                    @if (IsAdmin)
+                    {
+                        <button class="btn btn-secondary" style="margin-right: 20px;" @onclick="NavigateToEditPage">Edit</button>
+                        <button class="btn btn-danger" @onclick="DeleteBook">Delete</button>
+                    }
                 </div>
+
             </div>
         </div>
     </div>
@@ -81,9 +90,55 @@ else
     private string feedbackMessage = string.Empty;
     private string feedbackMessageType = "";
 
+    private bool IsAdmin { get; set; } = false;
+
+    [Inject]
+    public UserRoleCheck UserRoleChecker { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
+        IsAdmin = await UserRoleChecker.IsUserAdminAsync();
         await FetchBookDetails();
+    }
+
+    private async Task DeleteBook()
+    {
+        var confirm = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this book?");
+        if (confirm)
+        {
+            try
+            {
+                var response = await Http.DeleteAsync($"api/Book/{BookId}");
+                if (response.IsSuccessStatusCode)
+                {
+                    feedbackMessage = "Book deleted successfully!";
+                    feedbackMessageType = ""; // clear the error class
+                    NavManager.NavigateTo("/books"); // navigate to the books list or appropriate page
+                }
+                else
+                {
+                    feedbackMessage = "Deletion failed. Please try again later.";
+                    feedbackMessageType = "error";
+                }
+            }
+            catch (Exception ex)
+            {
+                feedbackMessage = $"An error occurred: {ex.Message}";
+                feedbackMessageType = "error";
+                Console.WriteLine(feedbackMessage);
+            }
+        }
+    }
+
+    private void NavigateToEditPage()
+    {
+        NavManager.NavigateTo($"/books/edit/{BookId}");
+    }
+
+
+    private async Task CheckUserRole()
+    {
+        IsAdmin = await UserRoleChecker.IsUserAdminAsync();
     }
 
     private async Task FetchBookDetails()
