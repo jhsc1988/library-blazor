@@ -1,8 +1,9 @@
 using lib_blazor.Models;
-using lib_blazor.Server.Data;
 using lib_blazor.Server.Repositories;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using System.Linq;
+using System.Threading.Tasks;
+using lib_blazor.Server.Repositories.IRepositories;
 
 namespace lib_blazor.Server.Controllers
 {
@@ -10,58 +11,104 @@ namespace lib_blazor.Server.Controllers
     [ApiController]
     public class BookController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
         private readonly IBookRepository _bookRepository;
 
-        public BookController(ApplicationDbContext context, IBookRepository bookRepository)
+        public BookController(IBookRepository bookRepository)
         {
-            _context = context;
             _bookRepository = bookRepository;
+        }
+
+        // GET: api/Book/5/edit
+        [HttpGet("{id}/edit")]
+        public async Task<ActionResult<Book>> GetBookForEditing(int id)
+        {
+            var result = await _bookRepository.GetOriginalBookByIdAsync(id);
+
+            if (!result.IsSuccess)
+            {
+                return NotFound(result.ErrorMessage);
+            }
+
+            return result.Book;
+        }
+
+// GET: api/Book/5/details
+        [HttpGet("{id}/details")]
+        public async Task<ActionResult<Book>> GetBookDetails(int id)
+        {
+            var result = await _bookRepository.GetBookByIdAsync(id);
+
+            if (!result.IsSuccess)
+            {
+                return NotFound(result.ErrorMessage);
+            }
+
+            var reservedResult = await _bookRepository.GetReservedCountForBookAsync(id);
+            if (!reservedResult.IsSuccess)
+            {
+                return StatusCode(500, reservedResult.ErrorMessage);
+            }
+
+            result.Book.Amount -= reservedResult.ReservedCount;
+
+            if (result.Book.Amount <= 0) result.Book.Amount = 0;
+
+            return result.Book;
         }
 
         // GET: api/Book
         [HttpGet]
+        // GET: api/Book/search?searchTerm=xyz
+        [HttpGet("search")]
         public async Task<IActionResult> GetBooks(string? searchTerm)
         {
-            if (string.IsNullOrWhiteSpace(searchTerm))
+            var result = await _bookRepository.GetBooksAsync(searchTerm);
+
+            if (!result.IsSuccess)
             {
-                var books = await _bookRepository.GetBooksAsync();
-                return Ok(books);
+                return StatusCode(500, result.ErrorMessage);
             }
-            else
-            {
-                var filteredBooks = await _bookRepository.GetBooksAsync();
-                filteredBooks = filteredBooks.Where(b => b.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
-                return Ok(filteredBooks);
-            }
+
+            return Ok(result.Books);
         }
 
         // GET: api/Book/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Book>> GetBook(int id)
+        public async Task<ActionResult<Book>> GetBook(int id, bool forEditing = false)
         {
-            if (_context.Books == null)
+            (bool IsSuccess, Book Book, string ErrorMessage) result;
+
+            // Decide which method to use based on the forEditing flag.
+            if (forEditing)
             {
-                return NotFound();
+                result = await _bookRepository.GetOriginalBookByIdAsync(id);
+            }
+            else
+            {
+                result = await _bookRepository.GetBookByIdAsync(id);
+                if (result.IsSuccess)
+                {
+                    var reservedResult = await _bookRepository.GetReservedCountForBookAsync(id);
+                    if (!reservedResult.IsSuccess)
+                    {
+                        return StatusCode(500, reservedResult.ErrorMessage);
+                    }
+
+                    result.Book.Amount -= reservedResult.ReservedCount;
+
+                    if (result.Book.Amount <= 0) result.Book.Amount = 0;
+                }
             }
 
-            var book = await _context.Books.FindAsync(id);
-
-            if (book == null)
+            if (!result.IsSuccess)
             {
-                return NotFound();
+                return NotFound(result.ErrorMessage);
             }
-            
-            var reservedCount = await _context.Reservations.CountAsync(r => r.Book.Id == id);
-            book.Amount -= reservedCount;
 
-            if (book.Amount <= 0) book.Amount = 0;
-            
-            return book;
+            return result.Book;
         }
 
         // PUT: api/Book/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutBook(int id, Book book)
         {
@@ -70,40 +117,28 @@ namespace lib_blazor.Server.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(book).State = EntityState.Modified;
-
-            try
+            var result = await _bookRepository.UpdateBookAsync(book);
+            if (!result.IsSuccess)
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!BookExists(id))
+                if (!(await _bookRepository.BookExistsAsync(id)).IsSuccess)
                 {
                     return NotFound();
                 }
-                else
-                {
-                    throw;
-                }
+                return StatusCode(500, result.ErrorMessage);
             }
 
             return NoContent();
         }
 
         // POST: api/Book
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Book>> PostBook(Book book)
         {
-            if (_context.Books == null)
+            var result = await _bookRepository.AddBookAsync(book);
+            if (!result.IsSuccess)
             {
-                return Problem("Entity set 'LIB_Context.Book'  is null.");
+                return StatusCode(500, result.ErrorMessage);
             }
-
-            _context.Books.Add(book);
-            await _context.SaveChangesAsync();
-
             return CreatedAtAction("GetBook", new { id = book.Id }, book);
         }
 
@@ -111,26 +146,27 @@ namespace lib_blazor.Server.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBook(int id)
         {
-            if (_context.Books == null)
+            var currentUser = User;
+            bool isAdmin = currentUser.HasClaim(c => c.Type == "http://schemas.microsoft.com/ws/2008/06/identity/claims/role" && c.Value == "Admin");
+
+            if (!isAdmin)
             {
-                return NotFound();
+                return Forbid();
             }
 
-            var book = await _context.Books.FindAsync(id);
-            if (book == null)
+            var bookResult = await _bookRepository.GetBookByIdAsync(id);
+            if (!bookResult.IsSuccess)
             {
-                return NotFound();
+                return NotFound(new { message = "Book not found" });
             }
 
-            _context.Books.Remove(book);
-            await _context.SaveChangesAsync();
+            var deleteResult = await _bookRepository.DeleteBookAsync(bookResult.Book);
+            if (!deleteResult.IsSuccess)
+            {
+                return StatusCode(500, deleteResult.ErrorMessage);
+            }
 
             return NoContent();
-        }
-
-        private bool BookExists(int id)
-        {
-            return (_context.Books?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }
