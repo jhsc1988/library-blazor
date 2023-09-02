@@ -114,13 +114,12 @@ else
             await FetchBookDetails();
         }
     }
-    
+
     private async Task FetchBookDetails()
     {
         _feedbackMessage = ""; // Clear feedback message
         try
         {
-    // Fetch the book details for editing to get the original amount
             _book = await Http.GetFromJsonAsync<Book>($"api/Book/{BookId}/edit");
         }
         catch (Exception ex)
@@ -162,7 +161,7 @@ else
 
     private void CancelEdit()
     {
-        _feedbackMessage = ""; // Clear feedback message
+        _feedbackMessage = "";
         NavManager.NavigateTo($"/books/{BookId}");
     }
 

@@ -46,8 +46,6 @@ namespace lib_blazor.Server.Repositories
             }
         }
 
-        // Repeat similar logging pattern for all methods
-
         public async Task<(bool IsSuccess, Book Book, string ErrorMessage)> GetBookByIdAsync(int id)
         {
             try
