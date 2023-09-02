@@ -1,138 +1,166 @@
-namespace lib_blazor.Server.Repositories;
+using Microsoft.Extensions.Logging;
 
-using Model;
-using IRepositories;
-using Data;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
-
-public class BookRepository : IBookRepository
+namespace lib_blazor.Server.Repositories
 {
-    private readonly ApplicationDbContext _context;
+    using Model;
+    using IRepositories;
+    using Data;
+    using Microsoft.EntityFrameworkCore;
+    using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
 
-    public BookRepository(ApplicationDbContext context)
+    public class BookRepository : IBookRepository
     {
-        _context = context;
-    }
+        private readonly ApplicationDbContext _context;
+        private readonly ILogger<BookRepository> _logger;
 
-    public async Task<(bool IsSuccess, IEnumerable<Book> Books, string ErrorMessage)> GetBooksAsync(
-        string? searchTerm = null)
-    {
-        try
+        public BookRepository(ApplicationDbContext context, ILogger<BookRepository> logger)
         {
-            var query = _context.Books.AsQueryable();
+            _context = context;
+            _logger = logger;
+        }
 
-            if (!string.IsNullOrWhiteSpace(searchTerm))
+        public async Task<(bool IsSuccess, IEnumerable<Book> Books, string ErrorMessage)> GetBooksAsync(
+            string? searchTerm = null)
+        {
+            try
             {
-                query = query.Where(b => b.Title.ToLower().Contains(searchTerm.ToLower()) ||
-                                         b.Author.ToLower().Contains(searchTerm.ToLower()) ||
-                                         b.Annotation.ToLower().Contains(searchTerm.ToLower()));
+                _logger.LogInformation($"Attempting to get books with searchTerm: {searchTerm}");
+
+                var query = _context.Books.AsQueryable();
+                if (!string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    query = query.Where(b => b.Title.ToLower().Contains(searchTerm.ToLower()) ||
+                                             b.Author.ToLower().Contains(searchTerm.ToLower()) ||
+                                             b.Annotation.ToLower().Contains(searchTerm.ToLower()));
+                }
+
+                var books = await query.ToListAsync();
+                return (true, books, null)!;
             }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to get books with searchTerm: {searchTerm}. Error: {ex.Message}");
+                return (false, null, ex.Message)!;
+            }
+        }
 
-            var books = await query.ToListAsync();
-            return (true, books, null)!;
-        }
-        catch (Exception ex)
-        {
-            return (false, null, ex.Message)!;
-        }
-    }
+        // Repeat similar logging pattern for all methods
 
+        public async Task<(bool IsSuccess, Book Book, string ErrorMessage)> GetBookByIdAsync(int id)
+        {
+            try
+            {
+                _logger.LogInformation($"Attempting to get book by ID: {id}");
 
-    public async Task<(bool IsSuccess, Book Book, string ErrorMessage)> GetBookByIdAsync(int id)
-    {
-        try
-        {
-            var book = await _context.Books.FindAsync(id);
-            return book != null ? (true, book, null)! : (false, null, "Book not found")!;
+                var book = await _context.Books.FindAsync(id);
+                return book != null ? (true, book, null)! : (false, null, "Book not found")!;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to get book by ID: {id}. Error: {ex.Message}");
+                return (false, null, ex.Message)!;
+            }
         }
-        catch (Exception ex)
-        {
-            return (false, null, ex.Message)!;
-        }
-    }
 
-    public async Task<(bool IsSuccess, Book Book, string ErrorMessage)> GetOriginalBookByIdAsync(int id)
-    {
-        try
+        public async Task<(bool IsSuccess, Book Book, string ErrorMessage)> GetOriginalBookByIdAsync(int id)
         {
-            var book = await _context.Books.AsNoTracking().FirstOrDefaultAsync(b => b.Id == id);
-            return book != null ? (true, book, null)! : (false, null, "Book not found")!;
-        }
-        catch (Exception ex)
-        {
-            return (false, null, ex.Message)!;
-        }
-    }
+            try
+            {
+                _logger.LogInformation($"Attempting to get original book by ID: {id}");
 
-    public async Task<(bool IsSuccess, int ReservedCount, string ErrorMessage)> GetReservedCountForBookAsync(int id)
-    {
-        try
-        {
-            var count = await _context.Reservations.CountAsync(r => r.Book!.Id == id);
-            return (true, count, null)!;
+                var book = await _context.Books.AsNoTracking().FirstOrDefaultAsync(b => b.Id == id);
+                return book != null ? (true, book, null)! : (false, null, "Book not found")!;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to get original book by ID: {id}. Error: {ex.Message}");
+                return (false, null, ex.Message)!;
+            }
         }
-        catch (Exception ex)
-        {
-            return (false, 0, ex.Message);
-        }
-    }
 
-    public async Task<(bool IsSuccess, string ErrorMessage)> BookExistsAsync(int id)
-    {
-        try
+        public async Task<(bool IsSuccess, int ReservedCount, string ErrorMessage)> GetReservedCountForBookAsync(int id)
         {
-            var exists = await _context.Books.AnyAsync(e => e.Id == id);
-            return (exists, null)!;
-        }
-        catch (Exception ex)
-        {
-            return (false, ex.Message);
-        }
-    }
+            try
+            {
+                _logger.LogInformation($"Attempting to get reserved count for book ID: {id}");
 
-    public async Task<(bool IsSuccess, string ErrorMessage)> UpdateBookAsync(Book book)
-    {
-        try
-        {
-            _context.Entry(book).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-            return (true, null)!;
+                var count = await _context.Reservations.CountAsync(r => r.Book!.Id == id);
+                return (true, count, null)!;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to get reserved count for book ID: {id}. Error: {ex.Message}");
+                return (false, 0, ex.Message);
+            }
         }
-        catch (Exception ex)
-        {
-            return (false, ex.Message);
-        }
-    }
 
-    public async Task<(bool IsSuccess, string ErrorMessage)> AddBookAsync(Book book)
-    {
-        try
+        public async Task<(bool IsSuccess, string ErrorMessage)> BookExistsAsync(int id)
         {
-            _context.Books.Add(book);
-            await _context.SaveChangesAsync();
-            return (true, null)!;
-        }
-        catch (Exception ex)
-        {
-            return (false, ex.Message);
-        }
-    }
+            try
+            {
+                _logger.LogInformation($"Checking if book with ID: {id} exists");
 
-    public async Task<(bool IsSuccess, string ErrorMessage)> DeleteBookAsync(Book book)
-    {
-        try
-        {
-            _context.Books.Remove(book);
-            await _context.SaveChangesAsync();
-            return (true, null)!;
+                var exists = await _context.Books.AnyAsync(e => e.Id == id);
+                return (exists, null)!;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to check existence for book ID: {id}. Error: {ex.Message}");
+                return (false, ex.Message);
+            }
         }
-        catch (Exception ex)
+
+        public async Task<(bool IsSuccess, string ErrorMessage)> UpdateBookAsync(Book book)
         {
-            return (false, ex.Message);
+            try
+            {
+                _logger.LogInformation($"Attempting to update book with ID: {book.Id}");
+
+                _context.Entry(book).State = EntityState.Modified;
+                await _context.SaveChangesAsync();
+                return (true, null)!;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to update book with ID: {book.Id}. Error: {ex.Message}");
+                return (false, ex.Message);
+            }
+        }
+
+        public async Task<(bool IsSuccess, string ErrorMessage)> AddBookAsync(Book book)
+        {
+            try
+            {
+                _logger.LogInformation($"Attempting to add a new book");
+
+                _context.Books.Add(book);
+                await _context.SaveChangesAsync();
+                return (true, null)!;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to add a new book. Error: {ex.Message}");
+                return (false, ex.Message);
+            }
+        }
+
+        public async Task<(bool IsSuccess, string ErrorMessage)> DeleteBookAsync(Book book)
+        {
+            try
+            {
+                _logger.LogInformation($"Attempting to delete book with ID: {book.Id}");
+
+                _context.Books.Remove(book);
+                await _context.SaveChangesAsync();
+                return (true, null)!;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to delete book with ID: {book.Id}. Error: {ex.Message}");
+                return (false, ex.Message);
+            }
         }
     }
 }
